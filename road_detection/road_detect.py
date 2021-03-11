@@ -8,7 +8,7 @@ import cv2
 
 """ Lower and upper RGB limits """
 lower  = 120
-upper = 190
+upper = 180
 
 """ Load images """
 # Load and display images
