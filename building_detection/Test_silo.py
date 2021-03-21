@@ -6,6 +6,7 @@ from model import EfficientFPN
 import torch.nn.functional as F
 from albumentations.pytorch import ToTensorV2
 import albumentations as A
+from skimage.transform import resize
 
 albu_dev = A.Compose([
     A.Normalize(),
@@ -28,10 +29,10 @@ def run_test(fname, downscale_f = 1):
     #import time
     #tic = time.time()
 
-    img = Image.open(fname).convert('RGB')
-    new_0 = int(np.round(downscale_f*np.size(img)[0]))
-    new_1 = int(np.round(downscale_f*np.size(img)[1]))
-    img = img.resize((new_0,new_1))
+    im = Image.open(fname).convert('RGB')
+    new_0 = int(np.round(downscale_f*np.size(im)[0]))
+    new_1 = int(np.round(downscale_f*np.size(im)[1]))
+    img = im.resize((new_0,new_1))
     nimg = np.array(img)
     data = albu_dev(image=nimg)
     nimg = data['image'].float()
@@ -81,13 +82,17 @@ def run_test(fname, downscale_f = 1):
     plt.show()
     plt.imshow(re_d[:new_1,:new_0])
     plt.show()
-    img = np.array(img)
+
     seg = re_d[:new_1,:new_0]
-    im_mask = np.zeros_like(img)
+    seg = resize(seg, (np.size(im)[1],np.size(im)[0]))
+    seg = seg * 255
+    seg = seg.astype(np.uint8)
+
+    im = np.array(im)
+    im_mask = np.zeros_like(im)
     idx=(seg==255)
-    im_mask[idx]=img[idx]
+    im_mask[idx]=im[idx]
     plt.imshow(im_mask)
-    plt.show()
     return im_mask
     
 #fname = 'silos.JPG'

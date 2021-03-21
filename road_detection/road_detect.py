@@ -7,12 +7,12 @@ import numpy as np
 import cv2
 
 """ Lower and upper RGB limits """
-lower  = 120
-upper = 180
+lower  = 160
+upper = 215
 
 """ Load images """
 # Load and display images
-input_image = cv2.imread('kentland_image_2.png')
+input_image = cv2.imread('odm_orthophoto_cropped.png')
 cv2.imshow('Input Image',input_image)
 cv2.waitKey(0)
 cv2.destroyAllWindows()

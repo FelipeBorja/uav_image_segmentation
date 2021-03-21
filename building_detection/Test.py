@@ -1,11 +1,12 @@
 import torch
 import numpy as np
 from PIL import Image
-#import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt
 from model import EfficientFPN
 import torch.nn.functional as F
 from albumentations.pytorch import ToTensorV2
 import albumentations as A
+from skimage.transform import resize
 
 albu_dev = A.Compose([
     A.Normalize(),
@@ -24,11 +25,14 @@ model = model.eval()
 
 def run_test(fname, downscale_f = 1):
     block = 1024
+    
+    #import time
+    #tic = time.time()
 
-    img = Image.open(fname).convert('RGB')  #.rotate(180) (DO NOT ROTATE)
-    new_0 = int(np.round(downscale_f*np.size(img)[0]))
-    new_1 = int(np.round(downscale_f*np.size(img)[1]))
-    img = img.resize((new_0,new_1))
+    im = Image.open(fname).convert('RGB')
+    new_0 = int(np.round(downscale_f*np.size(im)[0]))
+    new_1 = int(np.round(downscale_f*np.size(im)[1]))
+    img = im.resize((new_0,new_1))
     nimg = np.array(img)
     data = albu_dev(image=nimg)
     nimg = data['image'].float()
@@ -70,28 +74,35 @@ def run_test(fname, downscale_f = 1):
     re_d = p_d.permute(0, 3, 1, 4, 2, 5).contiguous().reshape(out_sz[1:])#.view_as(nimg)
     re_d = re_d.numpy() * 255
     re_d = re_d.astype(np.uint8)
-    #plt.imshow(np.array(img))
-    #plt.show()
-    #plt.imshow(re_o[:new_1,:new_0])
-    #plt.show()
-    #plt.imshow(re_d[:new_1,:new_0])
-    #plt.show()
-    img = np.array(img)
+    #toc = time.time()
+    #print(toc-tic)
+    plt.imshow(np.array(img))
+    plt.show()
+    plt.imshow(re_o[:new_1,:new_0])
+    plt.show()
+    plt.imshow(re_d[:new_1,:new_0])
+    plt.show()
+
     seg = re_d[:new_1,:new_0]
-    im_mask = np.zeros_like(img)
+    seg = resize(seg, (np.size(im)[1],np.size(im)[0]))
+    seg = seg * 255
+    seg = seg.astype(np.uint8)
+
+    im = np.array(im)
+    im_mask = np.zeros_like(im)
     idx=(seg==255)
-    im_mask[idx]=img[idx]
-    #plt.imshow(im_mask)
+    im_mask[idx]=im[idx]
+    plt.imshow(im_mask)
     return seg, im_mask
     
-fname = 'silos.JPG'
-seg, mask = run_test(fname, downscale_f = 0.125)
+fname = 'odm_orthophoto_cropped.JPG'
+seg, mask = run_test(fname, downscale_f = 0.25)
 print("Test complete")
 
 im_mask = np.array(mask, dtype='uint8')
 im_mask_ = Image.fromarray(im_mask)
-im_mask_.save("./output.png")
+im_mask_.save("./building_detection_output.png")
 
 im_seg = np.array(seg, dtype='uint8')
 im_seg_ = Image.fromarray(im_seg)
-im_seg_.save("./seg.png")
+im_seg_.save("./building_detection_seg.png")
