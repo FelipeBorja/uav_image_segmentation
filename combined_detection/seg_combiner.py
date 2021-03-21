@@ -5,6 +5,7 @@ Felipe Borja
 
 import numpy as np
 import cv2
+import matplotlib.pyplot as plt
 
 """ Load images """
 # Load and display images
@@ -24,15 +25,12 @@ for row in range(height):
             output_image[row][col] = [255,0,0]
         if(building_pixel.all() != 0):
             output_image[row][col] = [0,0,255]
-            obstacle_array[row][col] = 255
+            obstacle_array[row][col] = 1
 
+plt.imshow(output_image)
+plt.show()
+plt.imshow(obstacle_array)
+plt.show()
 
-cv2.imshow('Output Image', output_image)
-cv2.waitKey(0)
-cv2.destroyAllWindows()
 cv2.imwrite('output_image.png', output_image)
-            
-cv2.imshow('Obstacle Image', obstacle_array)
-cv2.waitKey(0)
-cv2.destroyAllWindows()
 cv2.imwrite('obstacle_image.png', obstacle_array)   
