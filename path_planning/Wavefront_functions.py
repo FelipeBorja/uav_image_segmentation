@@ -8,17 +8,18 @@ class LowDrone:
 
     def __init__(self, height, width, resolution):
         self.map_array = np.zeros((int(np.ceil(height / resolution)), int(np.ceil(width / resolution))), np.uint8)
-        self.POI = []
+        self.poi = []
         self.drone = []
         self.resolution = resolution
+        self.base_points = []  # Copies poi from initial configuration
 
     def find_next_point(self):
         """This function finds the next nearest points. Only linear distance is estimated"""
         dist = 10000
         best_p = []
         idx = 0
-        for i in range(len(self.POI)):
-            point = self.POI[i]
+        for i in range(len(self.poi)):
+            point = self.poi[i]
             # p_dist = np.linalg.norm(point, self.drone)
             p_dist = np.sqrt((point[0] - self.drone[0]) ** 2 + (point[1] - self.drone[1]) ** 2)
             if p_dist < dist:
@@ -79,7 +80,8 @@ def wavefront_planner(grid_def, goal, start, path):
     downl = [-1, -1]
     upr = [1, 1]
     upl = [-1, 1]
-    motions = [up, down, left, right, downr, downl, upr, upl]
+    # motions = [up, down, left, right, downr, downl, upr, upl]
+    motions = [downr, downl, upr, upl,up, down, left, right]
     grid = copy.deepcopy(grid_def)
     current = [goal]
     count = 2
