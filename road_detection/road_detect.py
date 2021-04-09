@@ -5,6 +5,7 @@ Felipe Borja
 
 import numpy as np
 import cv2
+import matplotlib.pyplot as plt
 
 """ Lower and upper RGB limits """
 lower  = 160
@@ -13,9 +14,8 @@ upper = 215
 """ Load images """
 # Load and display images
 input_image = cv2.imread('odm_orthophoto_cropped.png')
-cv2.imshow('Input Image',input_image)
-cv2.waitKey(0)
-cv2.destroyAllWindows()
+plt.imshow(input_image)
+plt.show()
 
 height, width, channels = input_image.shape # input image dimensions
 output_image  = np.zeros((height, width, channels), np.uint8) # same size as input image
@@ -33,9 +33,21 @@ for row in range(height):
             output_image[row][col] = pixel
 
 
-cv2.imshow('Output Image', output_image)
-cv2.waitKey(0)
-cv2.destroyAllWindows()
+""" Run some image gradient analyses using built-in OpenCV functions"""
+laplacian = cv2.Laplacian(input_image,cv2.CV_64F)
+sobelx = cv2.Sobel(input_image,cv2.CV_64F,1,0,ksize=5)
+sobely = cv2.Sobel(input_image,cv2.CV_64F,0,1,ksize=5)
+
+
+plt.imshow(output_image)
+plt.show()
+plt.imshow(laplacian)
+plt.show()
+plt.imshow(sobelx)
+plt.show()
+plt.imshow(sobely)
+plt.show()
+
 cv2.imwrite('output_image.png', output_image)
             
         
