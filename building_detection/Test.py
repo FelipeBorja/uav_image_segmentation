@@ -13,9 +13,9 @@ albu_dev = A.Compose([
     ToTensorV2(),
 ])
 
-model = EfficientFPN(encoder_name='efficientnet-b2', use_context_block=True, use_mish=True)#, use_attention=True)    
+model = EfficientFPN(encoder_name='efficientnet-b2', use_context_block=True, use_mish=True)#, use_attention=True)
 state = torch.load('models/model-b2-2.pth', map_location=lambda storage, loc: storage)
-    
+
 model.load_state_dict(state["state_dict"])
 
 #device = torch.device("cuda:0")
@@ -25,7 +25,7 @@ model = model.eval()
 
 def run_test(fname, downscale_f = 1):
     block = 1024
-    
+
     #import time
     #tic = time.time()
 
@@ -94,8 +94,8 @@ def run_test(fname, downscale_f = 1):
     im_mask[idx]=im[idx]
     plt.imshow(im_mask)
     return seg, im_mask
-    
-fname = 'odm_orthophoto_cropped.JPG'
+
+fname = 'odm_orthophoto_cropped.jpg'
 seg, mask = run_test(fname, downscale_f = 0.25)
 print("Test complete")
 

@@ -29,7 +29,7 @@ for row in range(height):
         pix_G = pixel[1]
         pix_R = pixel[2]
         # Check to see if pixel is gravel grey according to BGR conditions
-        if(pix_B < upper and pix_B > lower and pix_G < upper and pix_G > lower and pix_R < upper and pix_R > lower):
+        if(pix_B < upper and pix_B > lower and pix_G < upper and pix_G > lower and pix_R < upper and pix_R > lower): # TODO: make this more dynamic and less static
             output_image[row][col] = pixel
 
 
@@ -37,7 +37,7 @@ for row in range(height):
 laplacian = cv2.Laplacian(input_image,cv2.CV_64F)
 sobelx = cv2.Sobel(input_image,cv2.CV_64F,1,0,ksize=5)
 sobely = cv2.Sobel(input_image,cv2.CV_64F,0,1,ksize=5)
-
+# TODO: incorporate the filters into the final road estimation (one or more filters)
 
 plt.imshow(output_image)
 plt.show()
@@ -49,5 +49,3 @@ plt.imshow(sobely)
 plt.show()
 
 cv2.imwrite('output_image.png', output_image)
-            
-        
