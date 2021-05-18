@@ -2,15 +2,18 @@ from LOI_Path_Planner import *
 
 """Use this file to directly call the path planner. Implementation into larger framework can follow this general idea.
 """
+#The input array is the image that is segmented to detect obstacles
 input_array = cv2.imread("../combined_detection/obstacle_image.png")
 
 #Create initial object
-# How big is each pixel? Resulting grid must have ~0.5m squares to be within drone's position uncertainty
-resolution = 20
-obj = path_planner_init(input_array, [],resolution)
+#The output of this function is a grid that is discretized into areas where there are and are not buildings. The points
+# of interest have also been marked within this grid.
+resolution = 20  # How big is each pixel? Resulting grid must have ~0.5m squares
+points_of_interest = []  # What points have been selected for visitation
+obj = path_planner_init(input_array, points_of_interest,resolution)
 
 #Plan path
-path = []
+path = []  # Start path
 for i in range(len(obj.poi)):
     path = plan_next_point(obj,path)  # Function recursively adds onto path as necessary
 
