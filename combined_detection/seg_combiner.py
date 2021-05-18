@@ -9,8 +9,8 @@ import matplotlib.pyplot as plt
 
 """ Load images """
 # Load and display images
-building_input = cv2.imread('building_detection_seg.png')
-road_input = cv2.imread('road_detection_seg.png')
+building_input = cv2.imread('neighborhood_buildings_seg.png')
+road_input = cv2.imread('neighborhood_roads_seg.png')
 
 height, width, channels = building_input.shape # input image dimensions
 output_image = np.zeros((height, width, channels), np.uint8) # same size as input image
@@ -32,5 +32,5 @@ plt.show()
 plt.imshow(obstacle_array)
 plt.show()
 
-cv2.imwrite('output_image.png', output_image)
-cv2.imwrite('obstacle_image.png', obstacle_array)   
+cv2.imwrite('output_image_n.png', output_image)
+cv2.imwrite('obstacle_image_n.png', obstacle_array)   

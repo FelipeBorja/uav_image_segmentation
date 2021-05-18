@@ -95,14 +95,14 @@ def run_test(fname, downscale_f = 1):
     plt.imshow(im_mask)
     return seg, im_mask
 
-fname = 'odm_orthophoto_cropped.jpg'
-seg, mask = run_test(fname, downscale_f = 0.25)
+fname = 'neighborhood_image.jpg'
+seg, mask = run_test(fname, downscale_f = 1) # f = 0.25 for danny's images
 print("Test complete")
 
 im_mask = np.array(mask, dtype='uint8')
 im_mask_ = Image.fromarray(im_mask)
-im_mask_.save("./building_detection_output.png")
+im_mask_.save("./neighborhood_buildings.png")
 
 im_seg = np.array(seg, dtype='uint8')
 im_seg_ = Image.fromarray(im_seg)
-im_seg_.save("./building_detection_seg.png")
+im_seg_.save("./neighborhood_buildings_seg.png")

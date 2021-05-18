@@ -8,12 +8,12 @@ import cv2
 import matplotlib.pyplot as plt
 
 """ Lower and upper RGB limits """
-lower  = 160
-upper = 215
+lower  = 120
+upper = 240
 
 """ Load images """
 # Load and display images
-input_image = cv2.imread('odm_orthophoto_cropped.png')
+input_image = cv2.imread('neighborhood_image.jpg')
 plt.imshow(input_image)
 plt.show()
 
@@ -48,4 +48,4 @@ plt.show()
 plt.imshow(sobely)
 plt.show()
 
-cv2.imwrite('output_image.png', output_image)
+cv2.imwrite('output_image_neighborhood.png', output_image)
