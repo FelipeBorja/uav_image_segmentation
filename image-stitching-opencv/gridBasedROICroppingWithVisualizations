@@ -1,0 +1,150 @@
+"""
+Created on Wed May 19 17:48:21 2021
+
+@author: Colin Fox
+"""
+
+import cv2
+import numpy 
+
+def resizeToFrame(img):
+    return cv2.resize(img, (1920, 1080)) 
+
+# read image
+original = cv2.imread("/Users/notfo/Desktop/ALL CODING/USL/ImageCropping/odm_orthophoto.tif")
+
+# convert to grayscale
+gray = cv2.cvtColor(original,cv2.COLOR_BGR2GRAY)
+
+# threshold
+_,thresh = cv2.threshold(gray,5,255,cv2.THRESH_BINARY)
+
+# apply close and open morphology to fill tiny black and white holes
+kernel = numpy.ones((5,5), numpy.uint8)
+thresh = cv2.morphologyEx(thresh, cv2.MORPH_CLOSE, kernel)
+thresh = cv2.morphologyEx(thresh, cv2.MORPH_OPEN, kernel)
+
+# get contours (presumably just one around the nonzero pixels) 
+# then crop it to bounding rectangle
+contours = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+contours = contours[0] if len(contours) == 2 else contours[1]
+for cntr in contours:
+    x,y,w,h = cv2.boundingRect(cntr)
+    img = original[y:y+h,x:x+w]
+
+cv2.waitKey(0)
+cv2.destroyAllWindows()
+
+
+
+
+
+
+w, h = img.shape[0:2]
+
+#how many subregions the image is divided into
+subregionCount = 100
+
+
+#width and height in pixels of each grid square, assuming subregionCount by subregionCount squares
+gridPixelW = int(w/subregionCount)
+gridPixelH = int(h/subregionCount)
+
+#subregionCountxsubregionCount grid initially filled with all false values
+gridOfInterest = numpy.zeros((subregionCount, subregionCount))
+
+def isSignificant(img, currWidth, currHeight):
+    significant = False
+    #find current topleft pixel of grid img
+    currWidthPixel = currWidth*gridPixelW
+    currHeightPixel = currHeight*gridPixelH
+    
+    #create cropped image from grid
+    currentGridImg = img[currWidthPixel:currWidthPixel+gridPixelW, currHeightPixel:currHeightPixel+gridPixelH]
+
+    #get 3 wide arr of r,g,b vals respectively
+    channels = cv2.mean(currentGridImg)
+    #if the r,g,b sum is less than 700
+    if channels[0]+channels[1]+channels[2]>50:
+        significant = True
+        #draw a rectangle on the significant roi on the original image for visualization purposes
+        cv2.rectangle(img, (currHeightPixel,currWidthPixel),(currHeightPixel+gridPixelH, currWidthPixel+gridPixelW),(0,0,250), 3)
+    #returns true or false if the evaluated subregion is "significant" or not
+    return significant
+      
+           
+for widthVal in range(subregionCount):
+    for heightVal in range(subregionCount):
+        if isSignificant(img, widthVal, heightVal) == True:
+            gridOfInterest[widthVal][heightVal] = 1
+
+print(gridOfInterest)
+
+cv2.imshow('ROIs highlighted map', resizeToFrame(img))
+cv2.waitKey(0)
+
+#
+#
+#   below is from this link: https://towardsdatascience.com/largest-rectangle-in-a-matrix-33dd93bd2c45
+#   this finds the largest rectangle given a matrix
+#
+#
+def find_max001(matrix):
+
+    width = len(matrix[0])
+    height = len(matrix)
+
+    # max width and max height at the a point
+    # uses memorization and dynamic programming
+    max_matrix = [[None for v in row] for row in matrix]
+    def get_max(i, j):
+        if i >= width:
+            return 0, 0
+        elif j >= height:
+            return 0, 0
+        elif max_matrix[j][i] is not None:
+            return max_matrix[j][i]
+        elif matrix[j][i] == 0:
+            max_matrix[j][i] = (0, 0)
+            return max_matrix[j][i]
+
+        max_down = get_max(i, j + 1)
+        max_right = get_max(i + 1, j)
+
+        max_matrix[j][i] = (max_right[0] + 1,
+                            max_down[1] + 1)
+        return max_matrix[j][i]
+
+    max_rect = 0
+    for i in range(width):
+        for j in range(height):
+            rect = get_max(i, j)
+            #print(i, j)
+            #print(rect)
+            #print("next")
+            cur_max = rect[1]
+            for k in range(1, rect[0]):
+                cur_max = min(cur_max, get_max(i+k, j)[1])
+            if max_rect<cur_max*rect[0]:
+                x1=i
+                x2=i+rect[0]
+                y1=j
+                y2=j+rect[1]
+                max_rect=cur_max * rect[0]
+    return (x1, x2, y1, y2, max_rect)
+
+print("max rect")
+coords = find_max001(gridOfInterest)[0:4]
+print(coords)
+
+pixelX1 = coords[2] *gridPixelW
+pixelX2 = coords[3] *gridPixelW
+pixelY1 = coords[0] *gridPixelH
+pixelY2 = coords[1] *gridPixelH
+
+cv2.rectangle(img, (pixelY1,pixelX1),(pixelY2, pixelX2), (205, 0, 250), 3)
+cv2.imshow('rectangle', resizeToFrame(img))
+cv2.waitKey(0)
+
+cv2.imshow('cropped', resizeToFrame(img[pixelX1:pixelX2,pixelY1:pixelY2]))
+cv2.waitKey(0)
