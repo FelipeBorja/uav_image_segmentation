@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 Created on Wed May 19 17:48:21 2021
 
@@ -5,7 +6,9 @@ Created on Wed May 19 17:48:21 2021
 """
 
 import cv2
-import numpy 
+import numpy
+import matplotlib.pyplot as plt
+import matplotlib.cm as cm
 
 def resizeToFrame(img):
     return cv2.resize(img, (1920, 1080)) 
@@ -41,7 +44,7 @@ for cntr in contours:
 
 
 #my section
-
+print(img.shape)
 w, h = img.shape[0:2]
 
 #how many subregions the image is divided into
@@ -53,7 +56,7 @@ gridPixelW = int(w/subregionCount)
 gridPixelH = int(h/subregionCount)
 
 #subregionCountxsubregionCount grid initially filled with all false values
-gridOfInterest = numpy.zeros((subregionCount, subregionCount))
+gridOfInterest = numpy.ones((subregionCount, subregionCount))
 
 def isSignificant(img, currWidth, currHeight):
     significant = False
@@ -67,7 +70,7 @@ def isSignificant(img, currWidth, currHeight):
     #get 3 wide arr of r,g,b vals respectively
     channels = cv2.mean(currentGridImg)
     #if the r,g,b sum is less than 700
-    if channels[0]+channels[1]+channels[2]>50:
+    if channels[0]+channels[1]+channels[2]>60:
         significant = True
     #returns true or false if the evaluated subregion is "significant" or not
     return significant
@@ -76,67 +79,67 @@ def isSignificant(img, currWidth, currHeight):
 for widthVal in range(subregionCount):
     for heightVal in range(subregionCount):
         if isSignificant(img, widthVal, heightVal) == True:
-            gridOfInterest[widthVal][heightVal] = 1
+            gridOfInterest[widthVal][heightVal] = 0
 
 #
 #
-#   below is from this link: https://towardsdatascience.com/largest-rectangle-in-a-matrix-33dd93bd2c45
-#   this finds the largest rectangle given a matrix
+#found this on stackoverflow, need to find exact link
 #
 #
-def find_max001(matrix):
 
-    width = len(matrix[0])
-    height = len(matrix)
 
-    # max width and max height at the a point
-    # uses memorization and dynamic programming
-    max_matrix = [[None for v in row] for row in matrix]
-    def get_max(i, j):
-        if i >= width:
-            return 0, 0
-        elif j >= height:
-            return 0, 0
-        elif max_matrix[j][i] is not None:
-            return max_matrix[j][i]
-        elif matrix[j][i] == 0:
-            max_matrix[j][i] = (0, 0)
-            return max_matrix[j][i]
+def findMaxRect(matrix):
+    nrows = subregionCount
+    ncols = subregionCount
+    skip = 1
+    area_max = (0, [])
+    w = numpy.zeros(dtype=int, shape=matrix.shape)
+    h = numpy.zeros(dtype=int, shape=matrix.shape)
+    for r in range(nrows):
+        for c in range(ncols):
+            if matrix[r][c] == skip:
+                continue
+            if r == 0:
+                h[r][c] = 1
+            else:
+                h[r][c] = h[r-1][c]+1
+            if c == 0:
+                w[r][c] = 1
+            else:
+                w[r][c] = w[r][c-1]+1
+            minw = w[r][c]
+            for dh in range(h[r][c]):
+                minw = min(minw, w[r-dh][c])
+                area = (dh+1)*minw
+                if area > area_max[0]:
+                    area_max = (area, [(r-dh, c-minw+1, r, c)])
+    
+    print('area', area_max[0])
+    for t in area_max[1]:
+        print('Cell 1:({}, {}) and Cell 2:({}, {})'.format(*t))
+    print(area_max[1])
+    return area_max[1]
+coords = findMaxRect(gridOfInterest)[0]
 
-        max_down = get_max(i, j + 1)
-        max_right = get_max(i + 1, j)
 
-        max_matrix[j][i] = (max_right[0] + 1,
-                            max_down[1] + 1)
-        return max_matrix[j][i]
+fig = plt.figure()
+ax2 = fig.add_subplot(122)
+gridOfInterest[coords[0]][coords[1]]=-1
+gridOfInterest[coords[2]][coords[3]]=-1
+# 'nearest' interpolation - faithful but blocky
+ax2.imshow(gridOfInterest, interpolation='nearest', cmap=cm.Greys_r)
 
-    max_rect = 0
-    for i in range(width):
-        for j in range(height):
-            rect = get_max(i, j)
-            #print(i, j)
-            #print(rect)
-            #print("next")
-            cur_max = rect[1]
-            for k in range(1, rect[0]):
-                cur_max = min(cur_max, get_max(i+k, j)[1])
-            if max_rect<cur_max*rect[0]:
-                x1=i
-                x2=i+rect[0]
-                y1=j
-                y2=j+rect[1]
-                max_rect=cur_max * rect[0]
-    return (x1, x2, y1, y2, max_rect)
+plt.show()
+plt.rcParams['interactive'] == True
 
-print("max rect")
-coords = find_max001(gridOfInterest)[0:4]
-print(coords)
 
-#convert array position into pixel position
-pixelX1 = coords[2] *gridPixelW
-pixelX2 = coords[3] *gridPixelW
-pixelY1 = coords[0] *gridPixelH
-pixelY2 = coords[1] *gridPixelH
+
+pixelX1 = coords[0] *gridPixelW
+pixelX2 = coords[2] *gridPixelW
+pixelY1 = coords[1] *gridPixelH
+pixelY2 = coords[3] *gridPixelH
+
+
 
 
 cv2.imshow('cropped', resizeToFrame(img[pixelX1:pixelX2,pixelY1:pixelY2]))
