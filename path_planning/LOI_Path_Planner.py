@@ -22,21 +22,20 @@ from Wavefront_functions import *
 
 
 ###  Inputs:
-def path_planner_init(input_array, poi_list,res):
+def path_planner_init(input_array, poi_list,res,drone_start):
     """This function takes in an input array and list of points of interest (local frame).
     Returns the LOI_obj which stores the map at the appropriate resolution, points of interest,
     and drone location.
     Inputs to this file are a numpy array of points with obstacles marked by a value of "1"."""
     # input_array = cv2.imread("../combined_detection/obstacle_image.png")
 
-
     # Take image array and break into boxes
     height, width, channels = input_array.shape  # input image dimensions
     LOI_obj = LowDrone(height, width, res)  # same size as input image but only 1 channel
-    LOI_obj.drone = [5, 5]
+    LOI_obj.drone = drone_start
 
     ### Start processing
-
+    # Discretize image
     for row in range(height):
         for col in range(width):
             check = input_array[row][col] == [1]
@@ -45,12 +44,36 @@ def path_planner_init(input_array, poi_list,res):
                 y = int(np.floor(col / res))
                 LOI_obj.map_array[x][y] = 1
 
+    ## Add safety buffer:
+    buffer = 3  # Increase this number to increase buffer around buildings
+    for i in range(buffer):
+        buffer_map = copy.deepcopy(LOI_obj.map_array)
+        height,width = np.shape(buffer_map)
+        for row in range(height):
+            for col in range(width):
+                check_up = 0
+                check_down = 0
+                check_left = 0
+                check_right = 0
+                if 0 <= row+1 < height:
+                    check_up = buffer_map[row+1][col] == [1]
+                if 0 <= row-1 < height:
+                    check_down = buffer_map[row-1][col] == [1]
+                if 0 <= col-1 < width:
+                    check_left = buffer_map[row][col-1] == [1]
+                if 0 <= col+1 < width:
+                    check_right = buffer_map[row][col+1] == [1]
+                if any([check_up,check_down,check_left,check_right]):
+                    LOI_obj.map_array[row][col] = 1
+
+
     # Add POI
     if len(poi_list) == 0:
         LOI_obj.poi.append([80, 80])
-        LOI_obj.poi.append([60, 40])
-        LOI_obj.poi.append([95, 90])
+        LOI_obj.poi.append([67, 34])
+        LOI_obj.poi.append([99, 77])
         LOI_obj.poi.append([90, 20])
+        LOI_obj.poi.append([90,58])
     else:
         LOI_obj.poi = poi_list
 
